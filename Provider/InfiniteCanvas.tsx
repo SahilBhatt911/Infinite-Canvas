@@ -12,7 +12,7 @@ interface InfiniteCanvasProps {
 
 const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
   minScale = 0.1,
-  maxScale = 10,
+  maxScale = 1,
   children,
 }) => {
   const canvasRef = useRef<HTMLDivElement | null>(null);
@@ -23,7 +23,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
 
   useEffect(() => {
     if (!canvasRef.current) return;
-
+    console.log(zoomFactor)
     const canvas = d3.select(canvasRef.current);
 
     const zoom = d3
@@ -33,8 +33,22 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         setZoomTransform(event.transform);
       }) as d3.ZoomBehavior<HTMLDivElement, unknown>;
 
-    canvas.call(zoom);
+    canvas
+      .call(zoom)
+      .on("dblclick.zoom", null) 
+      .on("wheel.zoom", (event) => {
+        event.preventDefault();
+        const direction = event.deltaY > 0 ? -1 : 1;
+        const newScale = zoomTransform.k * (1 + direction * zoomFactor);
 
+        if(newScale < minScale || newScale > maxScale) return;
+
+        const newTransform = d3.zoomIdentity
+          .translate(zoomTransform.x, zoomTransform.y)
+          .scale(newScale);
+        canvas.call(zoom.transform, newTransform);
+        setZoomTransform(newTransform);
+      });
     return () => {
       canvas.on(".zoom", null);
       canvas.on(".wheel", null);
@@ -53,17 +67,17 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
       }}
       ref={canvasRef}
     >
-      <div className="controls">
+      <div className="controls" style={{ position: "absolute", top: 10, left: 10, zIndex: 10 }}>
         <label>
           Zoom Factor:
           <select
             onChange={(e) => setZoomFactor(Number(e.target.value))}
             value={zoomFactor}
           >
-            <option value={0.1}>0.01</option>
-            <option value={0.2}>0.02</option>
-            <option value={0.5}>0.05</option>
-            <option value={1}>0.1</option>
+            <option value={0.01}>0.01</option>
+            <option value={0.02}>0.02</option>
+            <option value={0.05}>0.05</option>
+            <option value={0.1}>0.1</option>
           </select>
         </label>
       </div>
