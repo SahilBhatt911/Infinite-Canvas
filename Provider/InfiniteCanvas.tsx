@@ -15,15 +15,17 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
   maxScale = 1,
   children,
 }) => {
-  const canvasRef = useRef<HTMLDivElement | null>(null);
+  const canvasRef = useRef<HTMLDivElement | null>(null);4
+  const zoomRef = useRef<d3.ZoomBehavior<HTMLDivElement, unknown> | null>(null);
   const [zoomTransform, setZoomTransform] = useState<d3.ZoomTransform>(
     d3.zoomIdentity
   );
-  const [zoomFactor, setZoomFactor] = useState<number>(0.5);
+  const [zoomFactor, setZoomFactor] = useState<number>(0.1);
+  const [zoomPercentage, setZoomPercentage] = useState<number>(100)
 
   useEffect(() => {
     if (!canvasRef.current) return;
-    console.log(zoomFactor)
+
     const canvas = d3.select(canvasRef.current);
 
     const zoom = d3
@@ -33,28 +35,53 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         setZoomTransform(event.transform);
       }) as d3.ZoomBehavior<HTMLDivElement, unknown>;
 
+    zoomRef.current = zoom;
+
     canvas
       .call(zoom)
       .on("dblclick.zoom", null) 
-      .on("wheel.zoom", (event) => {
-        event.preventDefault();
-        const direction = event.deltaY > 0 ? -1 : 1;
-        const newScale = zoomTransform.k * (1 + direction * zoomFactor);
-
-        if(newScale < minScale || newScale > maxScale) return;
-
-        const newTransform = d3.zoomIdentity
-          .translate(zoomTransform.x, zoomTransform.y)
-          .scale(newScale);
-        canvas.call(zoom.transform, newTransform);
-        setZoomTransform(newTransform);
-      });
+      
     return () => {
       canvas.on(".zoom", null);
-      canvas.on(".wheel", null);
     };
-  }, [minScale, maxScale, zoomTransform, zoomFactor]);
+  }, [minScale, maxScale]);
 
+  useEffect(() => {
+    if (!zoomRef.current || !canvasRef.current) return;
+
+    const canvas = d3.select(canvasRef.current);
+    const newScale = zoomPercentage / 100;
+    const newTransform = d3.zoomIdentity
+      .translate(zoomTransform.x, zoomTransform.y)
+      .scale(newScale);
+
+    canvas.transition().duration(500).call(zoomRef.current.transform, newTransform);
+    setZoomTransform(newTransform);
+  }, [zoomPercentage]);
+
+
+  // Zoom percentage
+  useEffect(() => {
+    if (!zoomRef.current || !canvasRef.current) return;
+
+    const canvas = d3.select(canvasRef.current);
+
+    const zoomHandler = (event: WheelEvent) => {
+      event.preventDefault();
+      const direction = event.deltaY > 0 ? -1 : 1;
+      const newZoomPercentage = zoomPercentage + direction * 25; // Adjust zoom increment here
+      if (newZoomPercentage >= 25 && newZoomPercentage <= 100) {
+        setZoomPercentage(newZoomPercentage);
+      }
+    };
+
+    canvas.node()!.addEventListener("wheel", zoomHandler);
+
+    return () => {
+      canvas.node()!.removeEventListener("wheel", zoomHandler);
+    };
+  }, [zoomPercentage]);
+  
   return (
     <div
       className="canvas__container"
@@ -69,15 +96,15 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
     >
       <div className="controls" style={{ position: "absolute", top: 10, left: 10, zIndex: 10 }}>
         <label>
-          Zoom Factor:
+          Zoom Percentage:
           <select
-            onChange={(e) => setZoomFactor(Number(e.target.value))}
-            value={zoomFactor}
+            onChange={(e) => setZoomPercentage(Number(e.target.value))}
+            value={zoomPercentage}
           >
-            <option value={0.01}>0.01</option>
-            <option value={0.02}>0.02</option>
-            <option value={0.05}>0.05</option>
-            <option value={0.1}>0.1</option>
+            <option value={25}>25%</option>
+            <option value={50}>50%</option>
+            <option value={75}>75%</option>
+            <option value={100}>100%</option>
           </select>
         </label>
       </div>
