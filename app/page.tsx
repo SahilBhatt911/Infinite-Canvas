@@ -1,8 +1,13 @@
-import Canvas from "@/components/Canvas";
+import InfiniteCanvas from "@/components/Canvas";
+import Footer from "@/components/Footer";
+import HeroHeader from "@/components/HeroHeader";
 import Image from "next/image";
 
 export default function Home() {
   return (
-    <Canvas/>
+    <InfiniteCanvas>
+      <HeroHeader/>
+      <Footer/>
+    </InfiniteCanvas>
   );
 }

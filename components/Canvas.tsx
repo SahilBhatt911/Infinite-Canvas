@@ -3,7 +3,19 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 import "./Canvas.css";
 
-const Canvas = () => {
+interface InfiniteCanvasProps {
+  initialScale?: number; 
+  minScale?: number; 
+  maxScale?: number; 
+  children?: React.ReactNode; 
+}
+
+const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
+  initialScale = 1,
+  minScale = 0.01,
+  maxScale = 10,
+  children,
+}) => {
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const [zoomTransform, setZoomTransform] = useState<d3.ZoomTransform>(
     d3.zoomIdentity
@@ -16,7 +28,7 @@ const Canvas = () => {
 
     const zoom = d3
       .zoom<HTMLDivElement, unknown>()
-      .scaleExtent([0.1, 10])
+      .scaleExtent([minScale, maxScale])
       .on("zoom", (event) => {
         setZoomTransform(event.transform);
       }) as d3.ZoomBehavior<HTMLDivElement, unknown>;
@@ -41,44 +53,34 @@ const Canvas = () => {
       canvas.on(".zoom", null);
       canvasRef.current?.removeEventListener("wheel", handleWheel);
     };
-  }, []);
+  }, [minScale, maxScale]);
 
   return (
-    <div className="canvas">
+    <div
+      className="canvas__container"
+      style={{
+        width: "100vw",
+        height: "100vh",
+        overflow: "hidden",
+      }}
+      ref={canvasRef}
+    >
       <div
         className="canvas__container"
         style={{
-          width: "100vw",
-          height: "100vh",
-          border: "1px solid black",
-          overflow: "hidden",
+          width: "100%",
+          height: "100%",
+          position: "absolute",
+          top: 0,
+          left: 0,
+          transform: `translate(${zoomTransform.x}px, ${zoomTransform.y}px) scale(${zoomTransform.k})`,
+          transformOrigin: "top left",
         }}
-        ref={canvasRef}
       >
-        <div
-          className="canvas__container"
-          style={{
-            width: "100%",
-            height: "100%",
-            position: "absolute",
-            top: 0,
-            left: 0,
-            transform: `translate(${zoomTransform.x}px, ${zoomTransform.y}px) scale(${zoomTransform.k})`,
-            transformOrigin: "top left",
-          }}
-        >
-          <div className="canvas__content">
-            <div style={{ position: "absolute", top: 100, left: 100 }}>
-              Component 1
-            </div>
-            <div style={{ position: "absolute", top: 300, left: 200 }}>
-              Component 2
-            </div>
-          </div>
-        </div>
+        {children}
       </div>
     </div>
   );
 };
 
-export default Canvas;
+export default InfiniteCanvas;
