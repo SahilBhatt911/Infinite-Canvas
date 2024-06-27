@@ -4,15 +4,14 @@ import * as d3 from "d3";
 // import "./Canvas.css";
 
 interface InfiniteCanvasProps {
-  initialScale?: number; 
-  minScale?: number; 
-  maxScale?: number; 
-  children?: React.ReactNode; 
+  initialScale?: number;
+  minScale?: number;
+  maxScale?: number;
+  children?: React.ReactNode;
 }
 
 const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
-  initialScale = 1,
-  minScale = 0.01,
+  minScale = 0.1,
   maxScale = 10,
   children,
 }) => {
@@ -20,6 +19,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
   const [zoomTransform, setZoomTransform] = useState<d3.ZoomTransform>(
     d3.zoomIdentity
   );
+  const [zoomFactor, setZoomFactor] = useState<number>(0.5);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -34,26 +34,12 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
       }) as d3.ZoomBehavior<HTMLDivElement, unknown>;
 
     canvas.call(zoom);
-    const handleWheel = (event: WheelEvent) => {
-      if (event.ctrlKey) {
-        event.preventDefault();
-        const scaleFactor = event.deltaY < 0 ? 1.2 : 0.8;
-        canvas
-          .transition()
-          .duration(200)
-          .call(zoom.scaleBy, scaleFactor, [event.clientX, event.clientY]);
-      }
-    };
-
-    canvasRef.current.addEventListener("wheel", handleWheel, {
-      passive: false,
-    });
 
     return () => {
       canvas.on(".zoom", null);
-      canvasRef.current?.removeEventListener("wheel", handleWheel);
+      canvas.on(".wheel", null);
     };
-  }, [minScale, maxScale]);
+  }, [minScale, maxScale, zoomTransform, zoomFactor]);
 
   return (
     <div
@@ -62,18 +48,31 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         width: "100vw",
         height: "100vh",
         overflow: "hidden",
-        backgroundColor: '#f3f3f3'
+        backgroundColor: "#f3f3f3",
+        position: "relative",
       }}
       ref={canvasRef}
     >
+      <div className="controls">
+        <label>
+          Zoom Factor:
+          <select
+            onChange={(e) => setZoomFactor(Number(e.target.value))}
+            value={zoomFactor}
+          >
+            <option value={0.1}>0.01</option>
+            <option value={0.2}>0.02</option>
+            <option value={0.5}>0.05</option>
+            <option value={1}>0.1</option>
+          </select>
+        </label>
+      </div>
       <div
         className="canvas__container"
         style={{
           width: "100%",
           height: "100%",
           position: "absolute",
-          top: 0,
-          left: 0,
           transform: `translate(${zoomTransform.x}px, ${zoomTransform.y}px) scale(${zoomTransform.k})`,
           transformOrigin: "top left",
         }}
