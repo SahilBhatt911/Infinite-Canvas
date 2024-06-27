@@ -17,6 +17,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
 }) => {
   const canvasRef = useRef<HTMLDivElement | null>(null);4
   const zoomRef = useRef<d3.ZoomBehavior<HTMLDivElement, unknown> | null>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
   const [zoomTransform, setZoomTransform] = useState<d3.ZoomTransform>(
     d3.zoomIdentity
   );
@@ -81,7 +82,33 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
       canvas.node()!.removeEventListener("wheel", zoomHandler);
     };
   }, [zoomPercentage]);
-  
+
+  useEffect(() => {
+    if (!zoomRef.current || !canvasRef.current || !contentRef.current) return;
+
+    const content = contentRef.current;
+    const canvas = canvasRef.current;
+
+    // Calculate the bounding box of the content
+    const bbox = content.getBoundingClientRect();
+    const canvasBBox = canvas.getBoundingClientRect();
+
+    // Calculate the scale and translation to fit the content in the canvas
+    const scaleX = canvasBBox.width / bbox.width;
+    const scaleY = canvasBBox.height / bbox.height;
+    const scale = Math.min(scaleX, scaleY);
+
+    const translateX = (canvasBBox.width - bbox.width * scale) / 2 - bbox.left * scale;
+    const translateY = (canvasBBox.height - bbox.height * scale) / 2 - bbox.top * scale;
+
+    const newTransform = d3.zoomIdentity
+      .translate(translateX, translateY)
+      .scale(scale);
+
+    d3.select(canvas).call(zoomRef.current!.transform, newTransform);
+    setZoomTransform(newTransform);
+  }, [children]);
+
   return (
     <div
       className="canvas__container"
@@ -110,6 +137,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
       </div>
       <div
         className="canvas__container"
+        ref={contentRef}
         style={{
           width: "100%",
           height: "100%",
