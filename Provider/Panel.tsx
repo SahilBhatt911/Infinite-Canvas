@@ -1,5 +1,4 @@
 import React from "react";
-import DraggableWrapper from "./DraggableWrapper";
 import Draggable from "react-draggable";
 
 interface PanelProps {
@@ -9,14 +8,12 @@ interface PanelProps {
   draggable?: boolean;
 }
 
-const Panel = ({
-  position,
-  children,
-  backgroundColor,
-  draggable,
-}: PanelProps) => {
-  let panelContent = (
-    <div className={`position-${position} absolute z-50`}>
+const Panel = ({ position, children, backgroundColor, draggable }: PanelProps) => {
+  const panelContent = (
+    <div
+      className={`position-${position} panel-content`}
+      style={{ backgroundColor: backgroundColor || "transparent", zIndex: 50 }}
+    >
       {children}
       <style jsx>{`
         .position-top-left {
@@ -39,16 +36,12 @@ const Panel = ({
           bottom: 50px;
           right: 50px;
         }
+        
       `}</style>
     </div>
   );
-  return draggable ? (
-    <Draggable>
-      {panelContent}
-    </Draggable>
-  ) : (
-    panelContent
-  );
+
+  return draggable ? <Draggable>{panelContent}</Draggable> : panelContent;
 };
 
 export default Panel;
