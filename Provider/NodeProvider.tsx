@@ -1,5 +1,6 @@
-import React from "react";
-import Node from '@/Provider/Node/CustomNode'
+import React, { useRef } from "react";
+import Node from "@/Provider/Node/CustomNode";
+import Xarrow from "react-xarrows";
 
 interface Section {
   id: string;
@@ -9,8 +10,8 @@ interface Section {
 
 interface Edge {
   id: string;
-  source: string;
-  target: string;
+  start: string;
+  end: string;
 }
 
 interface Position {
@@ -29,32 +30,32 @@ interface CanvasProps {
   edges: Edge[];
 }
 
-const NodeProvider = ({ nodes, edges }: CanvasProps) => {
+const Canvas = ({ nodes, edges }: CanvasProps) => {
+  const nodeRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
   return (
     <div className="relative w-full h-full">
       {nodes.map((node) => (
-        <Node key={node.id} id={node.id} title={node.title} position={node.position} />
+        <Node
+          key={node.id}
+          id={node.id}
+          title={node.title}
+          position={node.position}
+          ref={(el:any) => (nodeRefs.current[node.id] = el)}
+        />
       ))}
-      <svg className="absolute top-0 left-0 w-full h-full">
-        {edges.map((edge) => {
-          const sourceNode = nodes.find((node) => node.id === edge.source);
-          const targetNode = nodes.find((node) => node.id === edge.target);
-          if (!sourceNode || !targetNode) return null;
-          return (
-            <line
-              key={edge.id}
-              x1={sourceNode.position.x + 50}
-              y1={sourceNode.position.y + 50}
-              x2={targetNode.position.x + 50}
-              y2={targetNode.position.y}
-              stroke="black"
-              strokeWidth={1}
-            />
-          );
-        })}
-      </svg>
+      {edges.map((edge) => (
+        <Xarrow
+          key={edge.id}
+          start={edge.start}
+          end={edge.end}
+          color="black"
+          strokeWidth={2}
+          path="grid"
+        />
+      ))}
     </div>
   );
 };
 
-export default NodeProvider;
+export default Canvas;

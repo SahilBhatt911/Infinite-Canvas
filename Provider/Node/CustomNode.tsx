@@ -1,3 +1,4 @@
+import React, { forwardRef } from "react";
 import { EllipsisVertical, GripVertical, Plus } from "lucide-react";
 
 interface Section {
@@ -8,8 +9,8 @@ interface Section {
 
 interface Edge {
   id: string;
-  source: string;
-  target: string;
+  start: string;
+  end: string;
 }
 
 interface Position {
@@ -25,9 +26,12 @@ interface NodeProps {
   position: Position;
 }
 
-function Node({ id, title = "Node", position }: NodeProps) {
+// eslint-disable-next-line react/display-name
+const Node = forwardRef<HTMLDivElement, NodeProps>(({ id, title = "Node", position }: NodeProps, ref) => {
   return (
     <div
+      ref={ref}
+      id={id}
       className="border-2 border-red-400 w-[200px] absolute"
       style={{ left: position.x, top: position.y }}
     >
@@ -50,6 +54,6 @@ function Node({ id, title = "Node", position }: NodeProps) {
       </div>
     </div>
   );
-}
+});
 
 export default Node;

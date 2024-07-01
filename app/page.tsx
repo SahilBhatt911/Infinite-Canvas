@@ -1,20 +1,20 @@
 "use client";
 import InfiniteCanvas from "@/Provider/InfiniteCanvas";
-import CustomNode from "@/Provider/Node/CustomNode";
 import NodeProvider from "@/Provider/NodeProvider";
 import Panel from "@/Provider/Panel";
-import Feature from "@/components/Feature";
-import Footer from "@/components/Footer";
 
 export default function Home() {
   const nodes = [
-    { id: "1", title: "Node 1", position: { x: 300, y: 200 } },
+    { id: "1", title: "Node 1", position: { x: 100, y: 200 } },
     { id: "2", title: "Node 2", position: { x: 300, y: 400 } },
+    { id: "3", title: "Node 3", position: { x: 500, y: 300 } },
   ];
 
   const edges = [
-    { id: "e1-2", source: "1", target: "2" },
+    { id: "e1-2", start: "1", end: "2"},
+    { id: "e2-3", start: "2", end: "3"},
   ];
+
   return (
     <>
       <Panel position="top-right" draggable={true} >
